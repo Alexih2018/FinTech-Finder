@@ -22,14 +22,15 @@
 # section of Ganache to review the blockchain transaction details. To confirm that
 # you have successfully created the transaction, you will save screenshots to the
 # README.md file of your GitHub repository for this Challenge assignment.
-
-################################################################################
 # Imports
+
+from dotenv import load_dotenv
+load_dotenv("keys.env")
 import streamlit as st
 from dataclasses import dataclass
 from typing import Any, List
 from web3 import Web3
-w3 = Web3(Web3.HTTPProvider('HTTP://127.0.0.1:7545'))
+from web3.auto.infura.kovan import w3
 ################################################################################
 # Step 1:
 # Import Ethereum Transaction Functions into the Fintech Finder Application
@@ -46,7 +47,7 @@ w3 = Web3(Web3.HTTPProvider('HTTP://127.0.0.1:7545'))
 # 1. Review the code contained in the `crypto_wallet.py` script file. Note that
 # the Ethereum transaction functions that you have built throughout this
 # module-including `wallet`, `wallet.derive_acount`, `get_balance`, `fromWei`,
-# `estimateGas`, `sendRawTransaction`, and others&mdash;have now been
+# `estimateGas`, `sendRawTransaction`, and others-have now been
 # incorporated into Python functions that allow you to automate the process of
 # accessing them.
 
@@ -67,21 +68,11 @@ w3 = Web3(Web3.HTTPProvider('HTTP://127.0.0.1:7545'))
 # new `st.sidebar.write` function that will display the balance of the
 # customer’s account. Inside this function, call the `get_balance` function
 # and pass it your Ethereum `account.address`.
+# Importing the following functions from the `crypto_wallet.py` file:
 
-
-################################################################################
-# Step 1 - Part 3:
-# Import the following functions from the `crypto_wallet.py` file:
-# * `generate_account`
-# * `get_balance`
-# * `send_transaction`
-
-# @TODO:
-# From `crypto_wallet.py import the functions generate_account, get_balance,
-#  and send_transaction
-# YOUR CODE HERE
-
-################################################################################
+from crypto_wallet import generate_account
+from crypto_wallet import get_balance
+from crypto_wallet import send_transaction
 # Fintech Finder Candidate Information
 
 # Database of Fintech Finder candidates including their name, digital address, rating and hourly cost per Ether.
@@ -109,9 +100,6 @@ def get_people(w3):
         st.write("Hourly Rate per Ether: ", db_list[number][3], "eth")
         st.text(" \n")
 
-################################################################################
-# Streamlit Code
-
 # Streamlit application headings
 st.markdown("# Fintech Finder!")
 st.markdown("## Hire A Fintech Professional!")
@@ -123,33 +111,16 @@ st.text(" \n")
 st.sidebar.markdown("## Client Account Address and Ethernet Balance in Ether")
 
 ##########################################
-# Step 1 - Part 4:
-# Create a variable named `account`. Set this variable equal to a call on the
-# `generate_account` function. This function will create the Fintech Finder
-# customer’s (in this case, your) HD wallet and Ethereum account.
+# Creating a variable named account to hold account details. Calling the generate_account function.
+# This function creates the Fintech Finder customer’s HD wallet and Ethereum account.
 
-# @TODO:
-#  Call the `generate_account` function and save it as the variable `account`
-# YOUR CODE HERE
-
-##########################################
-
-# Write the client's Ethereum account address to the sidebar
+account = generate_account()
+# Writing the client's Ethereum account address to the sidebar
 st.sidebar.write(account.address)
 
-##########################################
-# Step 1 - Part 5:
-# Define a new `st.sidebar.write` function that will display the balance of the
-# customer’s account. Inside this function, call the `get_balance` function and
-#  pass it your Ethereum `account.address`.
-
-# @TODO
-# Call `get_balance` function and pass it your account address
-# Write the returned ether balance to the sidebar
-# YOUR CODE HERE
-
-##########################################
-
+# Writing the client's Ethereum account balance to the sidebar
+client_balance = get_balance(w3, account.address)
+st.sidebar.write(client_balance)
 # Create a select box to chose a FinTech Hire candidate
 person = st.sidebar.selectbox('Select a Person', people)
 
@@ -180,51 +151,6 @@ st.sidebar.write(candidate_address)
 
 st.sidebar.markdown("## Total Wage in Ether")
 
-################################################################################
-# Step 2: Sign and Execute a Payment Transaction
-
-# Complete the following steps:
-
-# 1. Fintech Finder customers will select a fintech professional from the
-# application interface’s drop-down menu, and then input the amount of time for
-# which they’ll hire the worker. Code the application so that once a customer
-# completes these steps, the application will calculate the amount that the
-# worker will be paid in ether. To do so, complete the following steps:
-
-    # * Write the equation that calculates the candidate’s wage. This equation
-    #  should assess the candidate’s hourly rate from the candidate database
-    # (`candidate_database[person][3]`) and then multiply this hourly rate by
-    # the value of the `hours` variable. Save this calculation’s output as a
-    # variable named `wage`.
-
-    # * Write the `wage` variable to the Streamlit sidebar by
-    # using `st.sidebar.write`.
-
-# 2. Now that the application can calculate a candidate’s wage, write the code
-# that will allow a customer (you, in this case) to send an Ethereum blockchain
-# transaction that pays the hired candidate. To accomplish this, locate the
-# code that reads `if st.sidebar.button("Send Transaction")`. You’ll need to
-# add logic to this `if` statement that sends the appropriate information to
-# the `send_transaction` function (which you imported from the `crypto_wallet`
-# script file). Inside the `if` statement, add the following functionality:
-
-    # * Call the `send_transaction()` function and pass it three parameters:
-        # - Your Ethereum `account` information. (Remember that this `account`
-        # instance was created when the `generate_account` function was called.)
-        #  From the `account` instance, the application will be able to access the
-        #  `account.address` information that is needed to populate the `from` data
-        # attribute in the raw transaction.
-        #- The `candidate_address` (which will be created and identified in the
-        # sidebar when a customer selects a candidate). This will populate the `to`
-        # data attribute in the raw transaction.
-        # - The `wage` value. This will be passed to the `toWei` function to
-        # determine the wei value of the payment in the raw transaction.
-
-    # * Save the transaction hash that the `send_transaction` function returns
-    # as a variable named `transaction_hash`, and have it display on the
-    # application’s web interface.
-
-##########################################
 # Step 2 - Part 1:
 # * Write the equation that calculates the candidate’s wage. This equation
 # should assess the candidate’s hourly rate from the candidate database
@@ -233,17 +159,16 @@ st.sidebar.markdown("## Total Wage in Ether")
 # variable named `wage`.
 # * Write the `wage` variable to the Streamlit sidebar by using `st.sidebar.write`.
 
-# @TODO
+wage = candidate_database[person][3] * hours
 # Calculate total `wage` for the candidate by multiplying the candidate’s hourly
 # rate from the candidate database (`candidate_database[person][3]`) by the
 # value of the `hours` variable
 # YOUR CODE HERE
 
-# @TODO
-# Write the `wage` calculation to the Streamlit sidebar
-# YOUR CODE HERE
+st.sidebar.write(wage)
 
 ##########################################
+
 # Step 2 - Part 2:
 # * Call the `send_transaction` function and pass it three parameters:
     # - Your Ethereum `account` information. (Remember that this `account`
@@ -268,7 +193,7 @@ if st.sidebar.button("Send Transaction"):
     # Call the `send_transaction` function and pass it 3 parameters:
     # Your `account`, the `candidate_address`, and the `wage` as parameters
     # Save the returned transaction hash as a variable named `transaction_hash`
-    # YOUR CODE HERE
+    transaction_hash = send_transaction(w3, account, candidate_address, wage)
 
     # Markdown for the transaction hash
     st.sidebar.markdown("#### Validated Transaction Hash")
@@ -281,40 +206,5 @@ if st.sidebar.button("Send Transaction"):
 
 # The function that starts the Streamlit application
 # Writes FinTech Finder candidates to the Streamlit page
-get_people()
+get_people(w3)
 
-################################################################################
-# Step 3: Inspect the Transaction
-
-# Send a test transaction by using the application’s web interface, and then
-# look up the resulting transaction hash in Ganache.
-
-# Complete the following steps:
-
-# 1. From your terminal, navigate to the project folder that contains
-# your `.env` file and the `fintech_finder.py` and `crypto_wallet.py` files.
-# Be sure to activate your Conda `dev` environment if it is not already active.
-
-# 2. To launch the Streamlit application,
-# type `streamlit run fintech_finder.py`.
-
-# 3. On the resulting webpage, select a candidate that you would like to hire
-# from the appropriate drop-down menu. Then, enter the number of hours that you
-# would like to hire them for. (Remember, you do not have a lot of ether in
-# your account, so you cannot hire them for long!)
-
-# 4 Click the Send Transaction button to sign and send the transaction with
-# your Ethereum account information. If the transaction is successfully
-# communicated to Ganache, validated, and added to a block,
-# a resulting transaction hash code will be written to the Streamlit
-# application sidebar.
-
-# 5. Navigate to the Ganache accounts tab and locate your account (index 0).
-    # * Take a screenshot of the address, balance, and transaction (TX) count.
-    # Save this screenshot to the README.md file of your GitHub repository for
-    #  this Challenge assignment.
-
-# 6. Navigate to the Ganache transactions tab and locate the transaction.
-    # * Click the transaction and take a screenshot of it.
-    # Save this screenshot to the README.md file of your GitHub repository for
-    #  this Challenge assignment.
